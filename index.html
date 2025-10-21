@@ -56,9 +56,7 @@
 </head>
 <body>
 <div class="container" id="exam-container">
-  <h2>CECTESTEXAM2028</h2>
-  <p>Please click below to start the exam. Fullscreen mode is required.</p>
-  <button onclick="startExam()">Enter Fullscreen and Start Exam</button>
+  <h2>Loading Exam...</h2>
 </div>
 
 <script>
@@ -100,14 +98,10 @@ function detectTabSwitch() {
 }
 
 function startExam() {
-  document.documentElement.requestFullscreen()
-    .then(() => {
-      detectTabSwitch();
-      showExamUI();
-      showQuestion();
-      startTimer();
-    })
-    .catch(() => alert("Fullscreen is required to start the exam."));
+  detectTabSwitch();
+  showExamUI();
+  showQuestion();
+  startTimer();
 }
 
 function showExamUI() {
@@ -157,6 +151,19 @@ function endExam(msg) {
   `;
   document.exitFullscreen?.();
 }
+
+// Automatically enter fullscreen and start exam
+window.onload = () => {
+  document.documentElement.requestFullscreen()
+    .then(() => startExam())
+    .catch(() => {
+      document.getElementById("exam-container").innerHTML = `
+        <h2>Fullscreen Required</h2>
+        <p>Please click below to enter fullscreen and start the exam.</p>
+        <button onclick="document.documentElement.requestFullscreen().then(startExam)">Start Exam</button>
+      `;
+    });
+};
 </script>
 </body>
 </html>
