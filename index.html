@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CECTESTEXAM2028</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 700px;
+  }
+  .question {
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+  .choices {
+    margin-bottom: 10px;
+  }
+  .timer {
+    color: red;
+    font-weight: bold;
+    text-align: right;
+  }
+  input[type="text"] {
+    width: 100px;
+    padding: 8px;
+    font-size: 16px;
+  }
+  button {
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+</style>
+</head>
+<body>
+<div class="container" id="exam-container">
+  <h2>UNIT TEST EXAM</h2>
+  <div class="timer" id="timer">Time left: 20s</div>
+  <div id="question-container"></div>
+  <input type="text" id="answerInput" placeholder="Type A, B, C, or D" maxlength="1">
+  <br><br>
+  <button id="next-btn" onclick="nextQuestion()">Next</button>
+</div>
+
+<script>
+const questions = [
+  {q:"What is the best indicator that you have successfully assembled a computer?",o:["a. You are able to close the system case cover.","b. All wires are connected and the lights blink when turned on.","c. There is a beeping sound as you turn it on.","d. The PC is able to boot up to the BIOS."],a:"D"},
+  {q:"These are the most common ports used by monitors to produce best video qualities EXCEPT FOR",o:["a. HDMI","b. DVI","c. RPS","d. VGA"],a:"C"},
+  {q:"These are the most necessary peripherals you should connect to your system unit to be able to run the computer easily.",o:["a. Speakers, Printer","b. Keyboard, Mouse, Monitor","c. Joystick, Headphones, Speakers","d. Scanner, Mouse, Webcam"],a:"B"},
+  {q:"When these are being installed in their slots, you should push these down properly to align it to the slots until you hear a click when the tabs lock.",o:["a. CPU Fan","b. Central Processing Unit","c. Random Access Memory","d. Power Supply Unit"],a:"C"},
+  {q:"When wearing the anti-static wrist wrap, where should the other end (aside from the wrist) should you clip the wrap onto?",o:["a. Unpainted part of the case","b. Standoffs of the case","c. Any screw","d. I/O Bezel Plate"],a:"A"},
+  {q:"After removing the Central Processing Unit, add thermal paste on the pins before putting it back to the CPU socket.",o:["a. True","b. False"],a:"B"},
+  {q:"The following are wirings from the power supply connected to the motherboard EXCEPT FOR:",o:["a. 2-pin power connector","b. 24-pin ATX power connector","c. SATA power connector"],a:"A"},
+  {q:"After disassembling a computer, what do you usually do before re-assembling the components again?",o:["a. Note the specifications","b. Use a well sanitized moist cloth and wipe the components neatly","c. Let them dry through the air conditioner or at room temperature","d. Put them away in a clean and secure box"],a:"D"},
+  {q:"Ideally, what is the LAST component that you take out in the disassembly process?",o:["a. RAM","b. Power Supply Connectors","c. CPU","d. CPU Fan"],a:"C"},
+  {q:"Before assembling the computer components, you should clean the components with a brush and add an amount of thermal paste to the heat sink and the processor.",o:["a. True","b. False"],a:"A"},
+  {q:"It is a layer of software used to manage computer resources. It provides the interface, configures and manage hardware to connect components to applications.",o:["a. Program Applications","b. Device Drivers","c. Operating System","d. BIOS"],a:"C"},
+  {q:"These are small software programs that help the operating system use the hardware devices. This is constantly updated and made sure that the correct versions are installed.",o:["a. Drivers","b. BIOS","c. Windows","d. Operating Systems"],a:"A"},
+  {q:"These are several ways in installing device drivers EXCEPT FOR:",o:["a. Driver Update through Device Manager","b. None","c. Manufacturer's DVD Installer","d. Downloading drivers online","e. Driverpack Solution"],a:"B"},
+  {q:"Booting is a startup sequence that launches the operating system of a computer when it is turned off. When installing an operating system to a computer, these files are placed in a boot drive.",o:["a. USB","b. Flash Drive","c. Random Access Memory","d. Hard Drive"],a:"D"},
+  {q:"The following are operating systems EXCEPT FOR",o:["a. Reaver","b. MAC OS","c. Linux","d. Windows"],a:"A"},
+  {q:"Which of the following is a FREE operating system?",o:["a. MAC OS","b. Linux","c. Reaver","d. Windows"],a:"B"},
+  {q:"It is responsible in making sure that all chips, hard drives, ports, CPU, and other components function together properly. This boots the computer and loads the drivers.",o:["a. Device Driver","b. Operating System","c. Software","d. BIOS"],a:"D"},
+  {q:"Third party applications like Rufus make use of bootable devices in the process of installing an operating system. Which device do we usually use to install an operating system?",o:["a. Hard Drive","b. Cloud Drive","c. Random Access Memory","d. Flash Drive"],a:"D"},
+  {q:"This operating system makes use of an interface with a Start Menu, Taskbar, System Tray among other user interface components.",o:["a. Reaver","b. Linux","c. Windows","d. MAC OS"],a:"C"},
+  {q:"This is a program used by the operating system to organize data or application files. The type of this program determines how data and programs will be accessed.",o:["a. .EXE organizer","b. Installation Procedure","c. Winzip","d. File System"],a:"D"}
+];
+
+let current = 0;
+let score = 0;
+let timer = 20;
+let countdown;
+
+function startFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+}
+
+function detectTabSwitch() {
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) endExam("You switched tabs. Exam ended automatically.");
+  });
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement) endExam("You exited fullscreen. Exam ended automatically.");
+  });
+}
+
+function startExam() {
+  startFullscreen();
+  detectTabSwitch();
+  showQuestion();
+  startTimer();
+}
+
+function showQuestion() {
+  const q = questions[current];
+  const container = document.getElementById("question-container");
+  container.innerHTML = `<div class='question'>${current + 1}. ${q.q}</div>`;
+  q.o.forEach(opt => container.innerHTML += `<div class='choices'>${opt}</div>`);
+  document.getElementById("answerInput").value = "";
+}
+
+function nextQuestion() {
+  const input = document.getElementById("answerInput").value.trim().toUpperCase();
+  if (input === questions[current].a) score++;
+  current++;
+  if (current < questions.length) {
+    timer = 20;
+    showQuestion();
+  } else {
+    endExam("Exam finished!");
+  }
+}
+
+function startTimer() {
+  countdown = setInterval(() => {
+    document.getElementById("timer").innerText = `Time left: ${timer}s`;
+    timer--;
+    if (timer < 0) nextQuestion();
+  }, 1000);
+}
+
+function endExam(msg) {
+  clearInterval(countdown);
+  document.getElementById("exam-container").innerHTML = `<h2>${msg}</h2><p>Your score: ${score}/${questions.length}</p>`;
+  document.exitFullscreen?.();
+}
+
+window.onload = startExam;
+</script>
+</body>
+</html>
